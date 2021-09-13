@@ -45,13 +45,23 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
         'Accept': 'application/vnd.github.v3+json',
       },
     ).then((value) {
-      if(value.statusCode == 200){
+      if (value.statusCode == 200) {
+        //get response and decode into json object
         var users = json.decode(value.body);
+        //assign object value to list
         _userNames = users['items'];
-        print(_userNames);
+
+        filterOnlySearched();
       }
     }).catchError((err) {
       print(err);
+    });
+  }
+
+  void filterOnlySearched() {
+    setState(() {
+      _userNames.removeWhere((element) =>
+          !element['login'].toString().startsWith(_controller.text));
     });
   }
 
@@ -74,6 +84,16 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
                   border: OutlineInputBorder(), hintText: 'Enter search term'),
             ),
             ElevatedButton(onPressed: search, child: const Text('Search')),
+            const Text('List of usernames'),
+            Expanded(
+                child: ListView.builder(
+              itemCount: _userNames.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(_userNames[index]['login']),
+                );
+              },
+            ))
           ],
         ),
       ),

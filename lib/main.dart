@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(const MyApp());
 
@@ -25,11 +28,31 @@ class MyStatefulWidget extends StatefulWidget {
 
 class _MyStatefulWidgetState extends State<MyStatefulWidget> {
   final TextEditingController _controller = TextEditingController();
+  List _userNames = [];
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void search() {
+    var _url =
+        Uri.parse('https://api.github.com/search/users?q=${_controller.text}');
+    http.get(
+      _url,
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+      },
+    ).then((value) {
+      if(value.statusCode == 200){
+        var users = json.decode(value.body);
+        _userNames = users['items'];
+        print(_userNames);
+      }
+    }).catchError((err) {
+      print(err);
+    });
   }
 
   @override
@@ -43,9 +66,15 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
       body: Container(
         alignment: Alignment.center,
         padding: const EdgeInsets.all(6),
-        child: TextFormField(
-          controller: _controller,
-          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Enter search term'),
+        child: Column(
+          children: <Widget>[
+            TextFormField(
+              controller: _controller,
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: 'Enter search term'),
+            ),
+            ElevatedButton(onPressed: search, child: const Text('Search')),
+          ],
         ),
       ),
     );
